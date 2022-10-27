@@ -5,10 +5,10 @@
 #define endl '\n'
 using namespace std;
 
-
-int v[100], w[100], f[100];
+int v[200], w[200], f[200];
 
 signed main() {
+
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
@@ -17,12 +17,10 @@ signed main() {
     for (int i = 1; i <= n; i++) {
         cin >> v[i] >> w[i];
     }
-
     for (int i = 1; i <= n; i++) {
-        for (int j = m; j >= w[i]; j--) {
+        for (int j = w[i]; j <= m; j++) {
             f[j] = max(f[j], f[j - w[i]] + v[i]);
         }
     }
-    cout << f[m];
+    cout << f[m] << endl;
 }
-
