@@ -5,30 +5,41 @@
 #define endl '\n'
 using namespace std;
 
+int a[101];
+int f[101];
+int n;
+int path[101];
+int maxindex;
+
+void print(inti) {
+    if (path[i]) print(path[i]);
+    cout << a[i] << " ";
+}
 
 signed main() {
+
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
+    cin >> n;
+    int ans = 1;
 
-    int n, m;
-    cin >> n >> m;
-    int v[100], w[100], f[100][100];
     for (int i = 1; i <= n; i++) {
-        cin >> v[i] >> w[i];
+        cin >> a[i];
+        f[i] = 1;
     }
-    for (int i = n; i >= 1; i--) {
-        for (int j = 0; j <= m; j++) {
-            f[i][j] = f[i + 1][j];
-            if (j >= v[i]) {
-                f[i][j] = max(f[i][j], f[i + 1][j - v[i]] + w[i]);
+
+    for (int i = 2; i <= n; i++) {
+        for (int j = 1; j < i; j++) {
+            if (a[i] > a[j] && f[j] + 1 > f[i]) {
+                f[i] = f[j] + 1;
+                path[i] = j;//记录前驱节点
             }
         }
-    }
-    int j = m;
-    for (int i = 1; i <= n; i++) {
-        if (j >= v[i] && f[i][j] == f[i + 1][j - v[i]] + w[i]) {
-            cout << i << " ";
-            j -= v[i];
+        if (f[i] > ans) {
+            ans = f[i];
+            maxindex = i;
         }
     }
+    cout << ans <<endl;
+    print(maxindex);
 }
