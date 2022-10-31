@@ -5,44 +5,33 @@
 #define endl '\n'
 using namespace std;
 
-int b[100005];
-int p[100005];
-int len = 0;
+int f[200][200];
+int index = 0;
+int ma = -1;
 
-int f(int x) {
-    int l = 1, r = len;
-    int mid, res;
-    while (l <= r) {
-        mid = (l + r) / 2;
-        if (p[mid] >= x) {
-            r = mid - 1;
-            res = mid;
-        } else {
-            l = mid + 1;
-        }
-    }
-    return res;
-}
-
-int main() {
-
+signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
+    string a, b;
+    cin >> a >> b;
+    int m = a.length();
+    int n = b.length();
 
-    int n;
-    cin >> n;
-
-    for (int i = 1; i <= n; i++) {
-        cin >> b[i];
-    }
-
-    for (int i = 1; i <= n; i++) {
-        if (b[i] > p[len]) {
-            p[++len] = b[i];
-        } else {
-            int index = f(b[i]);
-            p[index] = b[i];
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (a[i - 1] == b[j - 1]) {
+                f[i][j] = f[i - 1][j - 1] + 1;
+                if (f[i][j] >= ma) {
+                    ma = f[i][j];
+                    index = j - 1;
+                }
+            } else {
+                f[i][j] = 0;
+            }
         }
     }
-    cout << len;
+    cout << ma << endl;
+    for (int i = index - ma; i < index; i++) {
+        cout << a[i];
+    }
 }
