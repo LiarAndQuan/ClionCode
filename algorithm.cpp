@@ -10,24 +10,27 @@ signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n;
+
+    int n, m;
+    int res = -1;
+    cin >> n >> m;
     int nums[100];
     int q[100];
-    int m;
-    cin >> n >> m;
-    int h = 0, t = -1;
+
+    int h = 0, t = 0;
+    q[0] = 0;//提前给q[0]赋值,表示从第一个开始前m个最小值为0
 
     for (int i = 1; i <= n; i++) {
         cin >> nums[i];
-        if (h <= t && i - q[h] > m - 1) {
+        if (h <= t && i - q[h] > m) {
             h++;
         }
-        while (h <= t && nums[i] >= nums[q[t]]) {
+        res = max(res, nums[i] - nums[q[h]]);
+        while (h <= t && nums[i] <= nums[q[t]]) {
             t--;
         }
         q[++t] = i;
-        if (i > m - 1) {
-            cout << nums[q[h]];
-        }
     }
+
+    cout << res;
 }
