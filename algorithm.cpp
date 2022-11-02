@@ -5,71 +5,80 @@
 #define endl '\n'
 using namespace std;
 
-const int N = 10010, INF = 0x3f3f3f3f;
+
+const int N = 100010, INF = 0x3f3f3f3ff;
 int n;
-int h[N], e[2 * N], w[2 * N], ne[2 * N], idx;
-int d1[N], d2[N], p1[N], up[N];
+int h[N], e[N * 2], w[N * 2], ne[N * 2], idx;
+int d[N];
+int f[N];
+int deg[N];
 
-int dfs_d(int u,int father) {
-    d1[u] = 0;
-    d2[u] = 0;
-    for (int i = h[u]; i != -1; i = ne[i]) {
-        int j = e[i];
-        if (j == father) {
-            continue;
-        }
-        int d = dfs_d(j, u) + w[i];
-        if (d >= d1[u]) {
-            d2[u] = d1[u];
-            d1[u] = d;
-            p1[u] = j;
-        } else if (d > d2[u]) {
-            d2[u] = d;
-        }
-    }
-    return d1[u];
-}
-
-void dfs_u(int u,int father) {
-    for (int i = h[u]; i != -1; i = ne[i]) {
-        int j = e[i];
-        if (j == father) {
-            continue;
-        }
-        if (p1[u] == j) {
-            up[j] = max(up[u], d2[u]) + w[i];
-        } else {
-            up[j] = max(up[u], d1[u]) + w[i];
-        }
-        dfs_u(j, u);
-    }
-}
-
-void add(int a,int b,int c) {
+void add(int a, int b, int c) {
     e[++idx] = b;
     w[idx] = c;
     ne[idx] = h[a];
     h[a] = idx;
 }
 
+int dfs_d(int u, int fa) {
+    for (inti = h[u]; i; i = ne[i]) {
+        int j = e[i];
+        if (j == fa) {
+            continue;
+        }
+        int s = dfs_d(j, u);
+        d[u] += min(w[i], s);
+    }
+    if (deg[u] == 1) {
+        return INF;
+    } else {
+        return d[u];
+    }
+}
+
+void dfs_f(int u, int fa) {
+    for (int i = h[u]; i; i = ne[i]) {
+        int j = e[i];
+        if (j == fa) {
+            continue;
+        }
+        if (deg[u] == 1) {
+            f[j] = d[j] + w[i];
+        } else {
+            f[j] = d[j] + min(w[i], f[u] - min(w[i], d[j]));
+        }
+        dfs_f(j, u);
+    }
+}
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    memset(h, -1, sizeof h);
-    cin >> n;
-    for (int i = 1; i <= n - 1; i++) {
-        int a, b, c;
-        cin >> a >> b >> c;
-        add(a,b,c);
-        add(b,a,c);
+    int t;
+    cin >> t;
+    while (t--) {
+        cin >> n;
+        idx = 0;
+        memset(h, 0, sizeof(h));
+        memset(d, 0, sizeof(d));
+        memset(f, 0, sizeof(f));
+        memset(deg, 0, sizeof(deg));
+        for (inti = 1; i <= n - 1; i++) {
+            int a, b, c;
+            cin >> a >> b >> c;
+            add(a, b, c);
+            add(b, a, c);
+            deg[a]++;
+            deg[b]++;
+        }
+        dfs_d(1, -1);
+        f[1] = d[1];//根只有向下的流量
+        dfs_f(1, -1);
+        int ans = 0;
+        for (int i = 1; i <= n; i++) {
+            ans = max(ans, f[i]);
+        }
+        cout << ans << endl;
     }
-    dfs_d(1, -1);
-    dfs_u(1, -1);
-    int res = INF;
-    for (int i = 1; i <= n; i++) {
-        res = min(res, max(up[i], d1[i]));
-    }
-    cout<<res;
 }
