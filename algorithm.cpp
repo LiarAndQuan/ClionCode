@@ -6,33 +6,40 @@
 using namespace std;
 
 
-const int N = 1e5 + 10;
-int n, ans = N;
+const int N = 10010, M = 2 * N;
+int n, ans;
 bool vis[N];
-int h[N], e[2 * N], ne[2 * N], idx;
+int h[N], e[M], w[M], ne[M], idx;
 
-void add(int a, int b) {
+void add(int a,int b,int c) {
     e[++idx] = b;
+    w[idx] = c;
     ne[idx] = h[a];
     h[a] = idx;
 }
 
 int dfs(int u) {
     vis[u] = true;
-    int size = 0;//最大子树的节点数
-    int sum = 1;//以u为根的子树的节点数
+    int d1 = 0;
+    int d2 = 0;
     for (int i = h[u]; i != -1; i = ne[i]) {
-        int j = e[i];
-        if (vis[j]) {
+        int s = e[i];
+        if (vis[s]) {
             continue;
         }
-        int s = dfs(j);
-        size = max(size, s);
-        sum += s;
+        int d = dfs(s) + w[i];
+        if (d >= d2) {
+            d2 = d;
+        }
+        if (d >= d1) {
+            d2 = d1;
+            d1 = d;
+        }
+        ans = max(ans, d1 + d2);
     }
-    ans = min(ans, max(size, n - sum));
-    return sum;
+    return d1;
 }
+
 
 signed main() {
     ios::sync_with_stdio(false);
@@ -40,12 +47,12 @@ signed main() {
 
     memset(h, -1, sizeof(h));
     cin >> n;
-    for (int i = 1; i < n; i++) {
-        int a, b;
-        cin >> a >> b;
-        add(a, b);
-        add(b, a);
+    for (int i = 1; i <= n - 1; i++) {
+        int a, b, c;
+        cin >> a >> b >> c;
+        add(a, b, c);
+        add(b, a, c);
     }
     dfs(1);
-    cout << ans;
+    cout << ans <<endl;
 }
