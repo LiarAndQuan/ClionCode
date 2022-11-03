@@ -10,18 +10,22 @@ signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n;
-    int w[100];
-    int f[100][2];
-    cin >> n;
+    int n, k;
+    cin >> n >> k;
+    int w[100], f[100][100][2];
     for (int i = 1; i <= n; i++) {
         cin >> w[i];
     }
-    f[1][0] = 0;
-    f[1][1] = -w[1];
-    for (int i = 2; i <= n; i++) {
-        f[i][0] = max(f[i - 1][0], f[i - 1][1] + w[i]);
-        f[i][1] = max(f[i - 1][1], f[i - 1][0] - w[i]);
+    memset(f, 0, sizeof(f));
+
+    for (int j = 0; j <= k; j++) {
+        f[0][j][1] = -1e6;//前0天举行了k次交易手中有票不合法.
     }
-    cout << f[n][0];
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= k; j++) {
+            f[i][j][0] = max(f[i - 1][j][0], f[i - 1][j][1] + w[i]);
+            f[i][j][1] = max(f[i - 1][j][1], f[i - 1][j - 1][0] - w[i]);
+        }
+    }
+    cout << f[n][k][0];
 }
