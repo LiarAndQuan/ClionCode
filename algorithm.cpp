@@ -5,47 +5,51 @@
 #define endl '\n'
 using namespace std;
 
-int n, m;//行数,列数
-int g[10];//保存地图各行数值
-int cnt;//同一行的合法状态数量
-int s[1 << 10];//同一行的合法状态集合
-int num[1 << 10];//每个合法状态包含的1的个数
-int f[10][1 << 10][1 << 10];
-//前i行,第i行是第j个状态,第i-1行是第k个状态时,能放置点最大数量
+bool st[100];
 
 signed main() {
+
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
+    int n, m;
     cin >> n >> m;
-    for (int i = 1; i <= n; i++) {//地图转成二进制
-        for (int j = 0; j < m; j++) {
-            char c;
-            cin >> c;
-            if (c == 'P') {
-                g[i] += 1 << (m - j - 1);
+    //预处理:判断合并列的状态i是否合法
+    //如果合并列的某行是1表示横放,是0表示竖放
+    //如果合并列不存在连续的奇数个0,即为合法状态,因为可以用竖着的方块补充
+    for (int i = 0; i < 1 << n; i++) {
+        st[i] = true;
+        int cnt = 0;//记录合并列中连续0的个数
+        for (int j = 0; j < n; j++) {
+            if (i >> j & 1) {//如果是1
+                if (cnt & 1) {//如果是奇数
+                    st[i] = false;
+                    break;
+                }
+            } else {
+                cnt++;
             }
         }
-    }
-    for (int i = 0; i < (1 << m); i++) {//枚举合法状态
-        if (!(i & i >> 1) && !(i & i >> 2)) {
-            s[cnt++] = i;
-            for (int j = 0; j < m; j++) {
-                num[i] += (i >> j & 1);
-            }
+        if (cnt & 1) {//处理前导0,例如001000中前两个0
+            st[i] = false;
         }
     }
-    for (int i = 1; i <= n + 2; i++) {
-        for (int a = 0; a < cnt; a++) {//枚举第i行
-            for (int b = 0; b < cnt; b++) {//枚举第i-1行
-                for (int c = 0; c < cnt; c++) {//枚举第i-2行
-                    if (!(s[a] & s[b]) && !(s[b] & s[c]) && !(s[a] & s[c]) && (g[i] & s[a]) == s[a] &&
-                        (g[i - 1] & s[b]) == s[b]) {
-                        f[i][a][b] = max(f[i][a][b], f[i - 1][b][c] + num[s[a]]);
-                    }
+
+    int f[100][100];
+
+    memset(f, 0, sizeof(f));
+
+    f[0][0] = 1;
+    for (int i = 1; i <= m; i++) {
+        for (int j = 0; j < 1 << n; j++) {//枚举第i列
+            for (int k = 0; k < 1 << n; k++) {//枚举第i-1列
+                if ((j & k) == 0 && st[j | k]) {
+                    //两列状态兼容:不出现重叠的1,不出现连续的奇数个0
+                    f[i][j] += f[i - 1][k];
                 }
             }
         }
     }
-    cout << f[n + 2][0][0];
+
+    cout << f[m][0] <<endl;
 }
