@@ -1,29 +1,46 @@
-#include<bits/stdc++.h>
+#include<iostream>
+#include<algorithm>
 
-#define int long long
-#define double long double
-#define endl '\n'
 using namespace std;
 
 
-signed main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+typedef unsigned long long ull;
+const int P = 131;
 
+
+ull p[2000], h[2000];
+ull arr[100005];
+
+
+void init(string a) {
+    p[0] = 1;
+    h[0] = 0;
+    for (int i = 1; i <= a.length(); i++) {
+        p[i] = p[i - 1] * P;
+        h[i] = h[i - 1] * P + a[i - 1];
+    }
+}
+
+ull get(int l, int r) {
+    return h[r] - h[l - 1] * p[r - l + 1];
+}
+
+
+int main() {
     int n;
-    char s[100];
     cin >> n;
     for (int i = 1; i <= n; i++) {
-        cin >> s[i];
-        s[i + n] = s[i];
+        string a;
+        cin >> a;
+        init(a);
+        arr[i] = get(1, a.length());
     }
-    int i = 1, j = 2, k = 0;
-    while (i <= n && j <= n) {
-        for (k = 0; k < n && s[i + k] == s[j + k]; k++);
-        s[i + k] > s[j + k] ? i = i + k + 1 : j = j + k + 1;
-        if (i == j) {
-            j++;
+    sort(arr + 1, arr + 1 + n);
+    int count = 0;
+    for (int i = 1; i < n; i++) {
+        if (arr[i + 1] == arr[i]) {
+            count++;
         }
     }
-    cout << min(i, j);
+    cout << n - count;
 }
