@@ -1,47 +1,25 @@
-#include<iostream>
-
+#include<bits/stdc++.h>
 using namespace std;
-
-int ch[1000][2], idx;
-
-void insert(int n) {
-    int p = 0;
-    for (int i = 30; i >= 0; i--) {
-        int j = 1 & (n >> i);
-        if (!ch[p][j]) {
-            ch[p][j] = ++idx;
-        }
-        p = ch[p][j];
+string inorder, postorder;
+void f(int inl, int inr, int postl, int postr) {
+    if (inl > inr) {
+        cout << "#";
+        return;
     }
-}
+    cout << postorder[postr];
+    int index;
 
-int query(int n) {
-    int p = 0;
-    int res = 0;
-    for (int i = 30; i >= 0; i--) {
-        int j = 1 & (n >> i);
-        if (ch[p][!j]) {
-            res += 1 << i;
-            p = ch[p][!j];
-        } else {
-            p = ch[p][j];
+    for (int i = inl; i <= inr; i++) {
+        if (inorder[i] == postorder[postr]) {
+            index = i;
         }
     }
-    return res;
-}
+    index = index - inl;//长度
+    f(inl, inl + index - 1, postl, postl + index - 1);
+    f(inl + index + 1, postr - postl + inl, postl + index, postr - 1);
 
+}
 int main() {
-    int n;
-    cin >> n;
-    int a[100];
-    for (int i = 1; i <= n; i++) {
-        cin >> a[i];
-        insert(a[i]);
-    }
-    int ma = -1;
-    for (int i = 1; i <= n; i++) {
-        ma = max(ma, query(a[i]));
-    }
-    cout << ma;
-
+    cin >> postorder >> inorder;
+    f(0, inorder.length() - 1, 0, postorder.length() - 1);
 }
