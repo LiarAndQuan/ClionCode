@@ -1,43 +1,59 @@
 #include<bits/stdc++.h>
 
-#define int long long
-#define double long double
-#define endl '\n'
 using namespace std;
 
-int fa[10005];
 
-int find(int i) {
-    if (fa[i] == i) {
-        return i;
-    } else {
-        return fa[i] = find(fa[i]);
-    }
-}
+int main() {
+    int n;
+    while (cin >> n) {
 
-void unionset(int x, int y) {
-    fa[find(x)] = find(y);
-}
+        bool fir = true;
+        int cnt = 0;
+        int temp = n;
+        vector<int> res;
+        while (1) {
+            cnt++;
+            bool is = true;
+            vector<int> v;
 
-signed main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    int n, m;
-    cin >> n >> m;
-    for (int i = 0; i < 10000; i++) {
-        fa[i] = i;
-    }
-    for (int i = 1; i <= m; i++) {
-        int x, y, z;
-        cin >> z >> x >> y;
-        if (z == 1) {
-            unionset(x, y);
-        } else {
-            if (find(x) == find(y)) {
-                cout << "Y" << endl;
-            } else {
-                cout << "N" << endl;
+            int temp1 = temp;
+
+            while (temp) {
+                v.push_back(temp % 10);
+                temp /= 10;
             }
+
+            for (int i = 0; i < v.size(); i++) {
+                if (v[i] != v[v.size() - i - 1]) {
+                    is = false;
+                    break;
+                }
+            }
+
+            if (is) {
+                cout << cnt-1 << endl;
+                for (int i = 0; i < res.size(); i++) {
+                    if (i == 0) {
+                        cout << res[i];
+                    } else {
+                        cout << "--->" << res[i];
+                    }
+                }
+                cout << "--->" << temp1 << endl;
+                v.clear();
+                res.clear();
+                break;
+            } else {
+                int x = 0;
+                for (int i = 0; i < v.size(); i++) {
+                    x = x * 10 + v[i];
+                }
+                temp = x + temp1;
+                res.push_back(temp1);
+            }
+
         }
+
     }
+
 }
