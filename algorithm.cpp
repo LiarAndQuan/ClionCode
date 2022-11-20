@@ -5,74 +5,98 @@
 #define endl '\n'
 using namespace std;
 
+#define lc p<<1
+#define rc (p<<1)+1
+#define N 100005
 
-int ch[1000005][26], ne[1000005], cnt[1000005];
-int idx;
+int w[N];
 
+struct node {
+    int l, r, sum, add;
+} tr[4 * N];
 
-void build() {
-    queue<int> q;
-    for (int i = 0; i < 26; i++) {
-        if (ch[0][i]) {
-            q.push(ch[0][i]);
-        }
-    }
-    while (q.size()) {
-        int u = q.front();
-        q.pop();
-        for (int i = 0; i < 26; i++) {
-            int v = ch[u][i];
-            if (v) {
-                ne[v] = ch[ne[u]][i];//给子节点建立回跳边
-                q.push(v);
-            } else {
-                ch[u][i] = ch[ne[u]][i];//给自己建立转移边
-            }
-        }
+void pushup(int p) {
+    tr[p].sum = tr[lc].sum + tr[rc].sum;
+}
+
+void pushdown(int p) {//懒标记下发
+    if (tr[p].add) {
+        tr[lc].sum += tr[p].add * (tr[lc].r - tr[lc].l + 1);//左孩子区间加上
+        tr[rc].sum += tr[p].add * (tr[rc].r - tr[rc].l + 1);//右孩子区间加上
+        tr[lc].add += tr[p].add;//左孩子区间累加标记不下发
+        tr[rc].add += tr[p].add;//右孩子区间累加标记不下发
+        tr[p].add = 0;//父的标记清空
     }
 }
 
 
-int query(string s) {
-    int ans = 0;
-    for (int k = 0, i = 0; k < s.length(); k++) {
-        i = ch[i][s[k] - 'a'];//i沿着树边或者转移边走
-        for (int j = i; j && cnt[j] != -1; j = ne[j]) {//j沿着回跳边走
-            ans += cnt[j];
-            cnt[j] = -1;
-        }
-
+void build(int p, int l, int r) {
+    tr[p] = {l, r, w[l], 0};
+    if (l == r) {
+        return;
     }
-    return ans;
+    int m = (l + r) / 2;
+    build(lc, l, m);
+    build(rc, m + 1, r);
+    pushup(p);
 }
 
-void insert(string s) {
-    int p = 0;
-    for (int i = 0; i < s.length(); i++) {
-        int j = s[i] - 'a';
-        if (!ch[p][j]) {
-            ch[p][j] = ++idx;
-        }
-        p = ch[p][j];
+void update(int p, int x, int y, int k) {
+    if (x <= tr[p].l && tr[p].r <= y) {//如果全部覆盖,打上标记,自己的sum更新
+        tr[p].sum += (tr[p].r - tr[p].l + 1) * k;
+        tr[p].add += k;
+        return;
     }
-    cnt[p]++;
+    int m = (tr[p].l + tr[p].r) / 2;//没有全部覆盖那就给子区间进行相同的操作
+    pushdown(p);//先下发标记
+    if (x <= m) {
+        update(lc, x, y, k);
+    }
+    if (y > m) {
+        update(rc, x, y, k);
+    }
+    pushup(p);//没有完全覆盖的情况下,在进行完子区间的操作之后自己还需要更新
 }
 
+int query(int p, int x, int y) {
+    if (x <= tr[p].l && tr[p].r <= y) {
+        return tr[p].sum;//如果覆盖了这个区间,那么这个区间全要,直接返回
+    }
+    int m = (tr[p].l + tr[p].r) / 2;//没有全部覆盖就找孩子区间继续往复
+    pushdown(p);
+    int sum = 0;
+    if (x <= m) {//如果左孩子的区间和查询区间有重叠
+        sum += query(lc, x, y);
+    }
+    if (y > m) {//如果右孩子的区间和查询区间有重叠
+        sum += query(rc, x, y);
+    }
+    return sum;
+}
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n;
-    cin >> n;
+    int n, m;
+    cin >> n >> m;
+
     for (int i = 1; i <= n; i++) {
-        string a;
-        cin >> a;
-        insert(a);
+        cin >> w[i];
     }
-    string cm;
-    cin >> cm;
-    build();
-    cout << query(cm);
+    build(1, 1, n);
+    for (int i = 1; i <= m; i++) {
+        int op;
+        cin >> op;
+        if (op == 1) {
+            int x, y, k;
+            cin >> x >> y >> k;
+            update(1, x, y, k);
+        } else {
+            int x, y;
+            cin >> x >> y;
+            cout << query(1, x, y) << endl;
+        }
+    }
 
 }
