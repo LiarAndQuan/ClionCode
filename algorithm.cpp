@@ -6,46 +6,49 @@
 using namespace std;
 
 
-#define N 100
+int n, m;
+char arr[105][105];
+int ans;
 
-int n, ans;
-int pos[N], c[N], p[N], q[N];
+int dx[8] = {-1, -1, -1, 0, 1, 1, 1, 0};
+int dy[8] = {-1, 0, 1, 1, 1, 0, -1, -1};
 
-
-void print() {
-    if (ans <= 3) {
-        for (int i = 1; i <= n; i++) {
-            cout << pos[i] << " ";
+void bfs(int i, int j) {
+    queue<pair<int, int>> q;
+    q.push({i, j});
+    while (q.size()) {
+        pair<int, int> p = q.front();
+        q.pop();
+        for (int k = 0; k < 8; k++) {
+            int xx = p.first + dx[k];
+            int yy = p.second + dy[k];
+            if (xx >= 1 && xx <= n && yy >= 1 && yy <= m && arr[xx][yy] == 'W') {
+                arr[xx][yy] = '.';
+                q.push({xx, yy});
+            }
         }
-        cout << endl;
-    }
-
-}
-
-
-void dfs(int i) {
-    if (i > n) {
-        ans++;
-        print();
-        return;
-    }
-    for (int j = 1; j <= n; j++) {
-        if (c[j] || p[i + j] || q[i - j + n]) {
-            continue;
-        }
-        pos[i] = j;
-        c[j] = p[i + j] = q[i - j + n] = 1;
-        dfs(i + 1);
-        c[j] = p[i + j] = q[i - j + n] = 0;
     }
 }
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    cin >> n;
-    dfs(1);
-    cout << ans;
 
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            cin >> arr[i][j];
+        }
+    }
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            if (arr[i][j] == 'W') {
+                ans++;
+                arr[i][j] = '.';
+                bfs(i, j);
+            }
+        }
+    }
+    cout << ans << endl;
 
 }
