@@ -6,59 +6,53 @@
 using namespace std;
 
 
+int g[100][100];
+int dis[100][100];
+int dx[4] = {-1, 0, 1, 0};
+int dy[4] = {0, 1, 0, -1};
 int n, m;
-int arr[200][200];
-int a, b, x, y;
-int dx[4] = {0, 0, 1, -1};
-int dy[4] = {1, -1, 0, 0};
-pair<int, int> ps[200][200];
 
 
-void print(int i, int j) {
-    if (i == a && j == b) {
-        return;
-    } else {
-        print(ps[i][j].first, ps[i][j].second);
-        cout << ps[i][j].first << " " << ps[i][j].second << endl;
-    }
-}
-
-void bfs(int i, int j) {
+void bfs() {
+    memset(dis, -1, sizeof(dis));
     queue<pair<int, int>> q;
-    q.push({i, j});
-    while (q.size()) {
-        pair<int, int> cur = q.front();
-        q.pop();
-        if (cur.first == x && cur.second == y) {
-            print(x, y);
-            cout << x << " " << y << endl;
-            return;
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            if (g[i][j] == 1) {
+                q.push({i, j});
+                dis[i][j] = 0;
+            }
         }
-        for (int k = 0; k < 4; k++) {
-            int xx = cur.first + dx[k];
-            int yy = cur.second + dy[k];
-            if (xx >= 1 && xx <= n && yy >= 1 && yy <= m && arr[xx][yy] == 0) {
-                arr[xx][yy] = 1;
+    }
+
+    while (q.size()) {
+        auto cur = q.front();
+        q.pop();
+        for (int i = 0; i < 4; i++) {
+            int xx = cur.first + dx[i];
+            int yy = cur.second + dy[i];
+            if (xx >= 1 && xx <= n && yy >= 1 && yy <= m && dis[xx][yy] == -1) {
+                dis[xx][yy] = dis[cur.first][cur.second] + 1;
                 q.push({xx, yy});
-                ps[xx][yy] = cur;
             }
         }
     }
 }
 
-
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-
     cin >> n >> m;
-    cin >> a >> b >> x >> y;
-
     for (int i = 1; i <= n; i++) {
         for (int j = 1; j <= m; j++) {
-            cin >> arr[i][j];
+            cin >> g[i][j];
         }
     }
-    bfs(a, b);
+    bfs();
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
+            cout << dis[i][j] << " ";
+        }
+        cout << endl;
+    }
 }
-
