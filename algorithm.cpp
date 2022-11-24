@@ -5,43 +5,50 @@
 #define endl '\n'
 using namespace std;
 
-unordered_map<string,int> d;
-int dx[4] = {-1, 0, 1, 0};
-int dy[4] = {0, 1, 0, -1};
 
-int bfs(string str, string end) {
-    queue<string> q;
-    q.push(str);
-    while (q.size()) {
-        auto s = q.front();
-        q.pop();
-        if (s == end) {
-            return d[s];
+int n, m;
+vector<int> e[100], tp;
+int din[100];
+
+
+bool toposort() {
+    queue<int> q;
+    for (int i = 1; i <= n; i++) {
+        if (din[i] == 0) {
+            q.push(i);
         }
-        int k = s.find('0');
-        int x = k / 3;
-        int y = k % 3;
-        for (int i = 0; i < 4; i++) {
-            int xx = x + dx[i];
-            int yy = y + dy[i];
-            if (xx >= 0 && xx <= 2 && yy >= 0 && yy <= 2) {
-                int dis = d[s];
-                swap(s[k], s[xx * 3 + yy]);
-                if (!d.count(s)) {
-                    d[s] = dis + 1;
-                    q.push(s);
-                }
-                swap(s[k], s[xx * 3 + yy]);
+    }
+    while (q.size()) {
+        int cur = q.front();
+        q.pop();
+        tp.push_back(cur);
+        for (int i: e[cur]) {
+            if (--din[i] == 0) {
+                q.push(i);
             }
         }
     }
-    return 0;
+    return tp.size() == n;//如果拓扑序列里面的值的个数等于n那么就无环
 }
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    string str;
-    cin >> str;
-    cout << bfs(str, "123804765");
+
+    cin >> n >> m;
+    for (int i = 1; i <= m; i++) {
+        int a, b;
+        cin >> a >> b;
+        e[a].push_back(b);
+        din[b]++;
+    }
+    if (!toposort()) {//如果有环存在
+        cout << "ERROR" <<endl;
+    } else {
+        for (int x: tp) {
+            cout << x << " ";
+        }
+        cout <<endl;
+    }
+
 }
