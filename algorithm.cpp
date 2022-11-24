@@ -6,29 +6,37 @@
 using namespace std;
 
 
-int n, m;
 vector<int> e[100], tp;
-int din[100];
+int c[100];//染色数组
+int n, m;
 
-
-bool toposort() {
-    queue<int> q;
-    for (int i = 1; i <= n; i++) {
-        if (din[i] == 0) {
-            q.push(i);
-        }
-    }
-    while (q.size()) {
-        int cur = q.front();
-        q.pop();
-        tp.push_back(cur);
-        for (int i: e[cur]) {
-            if (--din[i] == 0) {
-                q.push(i);
+bool dfs(int x) {
+    c[x] = -1;
+    for (int i: e[x]) {
+        if (c[i] == -1) {
+            return 0;
+        } else if (c[i] == 0) {
+            if (!dfs(i)) {
+                return 0;
             }
         }
     }
-    return tp.size() == n;//如果拓扑序列里面的值的个数等于n那么就无环
+    c[x] = 1;
+    tp.push_back(x);
+    return 1;
+}
+
+bool toposort() {
+    memset(c, 0, sizeof(c));
+    for (int x = 1; x <= n; x++) {
+        if (!c[x]) {
+            if (!dfs(x)) {
+                return 0;
+            }
+        }
+    }
+    reverse(tp.begin(), tp.end());
+    return 1;
 }
 
 signed main() {
@@ -40,15 +48,12 @@ signed main() {
         int a, b;
         cin >> a >> b;
         e[a].push_back(b);
-        din[b]++;
     }
-    if (!toposort()) {//如果有环存在
-        cout << "ERROR" <<endl;
+    if (!toposort()) {
+        cout << "Error" <<endl;
     } else {
-        for (int x: tp) {
-            cout << x << " ";
+        for (int i: tp) {
+            cout << i << " ";
         }
-        cout <<endl;
     }
-
 }
