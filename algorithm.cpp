@@ -13,46 +13,65 @@ struct edge {
 
 vector<edge> e[100005];
 int d[100005], vis[100005];
-priority_queue<pair<int,int>> q;
+
 int n, m;
+int times[100000];//记录每个点最短路径所含的边数
 
 
-void dijkstra(int s) {
-    for (int i = 0; i <= n; i++) {
-        d[i] = pow(2, 31) - 1;
-    }
+bool spfa(int s) {
+    queue<int> q;
+    memset(d, 0x3f3f3f3f, sizeof(d));
     d[s] = 0;
-    q.push({0, s});
+    vis[s] = 1;
+    q.push(s);
     while (q.size()) {
-        auto t = q.top();
+        int u = q.front();
         q.pop();
-        if (vis[t.second]) {
-            continue;
-        }
-        vis[t.second] = 1;
-        for (auto ed: e[t.second]) {
+        vis[u] = false;
+        for (edge ed: e[u]) {
             int v = ed.v;
             int w = ed.w;
-            if (d[v] > d[t.second] + w) {
-                d[v] = d[t.second] + w;
-                q.push({-d[v], v});
+            if (d[v] > d[u] + w) {
+                d[v] = d[u] + w;
+                times[v] = times[u] + 1;
+                if (times[v] >= n) {//如果一个点的最短路径所含的边数大于等于n,那么一定有负环
+                    return true;
+                }
+                if (!vis[v]) {
+                    vis[v] = true;
+                    q.push(v);
+                }
             }
         }
     }
+    return false;
 }
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    int s;
-    cin >> n >> m >> s;
-    for (int i = 1; i <= m; i++) {
-        int a, b, c;
-        cin >> a >> b >> c;
-        e[a].push_back({b, c});
-    }
-    dijkstra(s);
-    for (int i = 1; i <= n; i++) {
-        cout << d[i] << " ";
+    int t;
+    cin >> t;
+    while (t--) {
+        cin >> n >> m;
+        for (int i = 0; i <= n; i++) {
+            e[i].clear();
+            times[i] = 0;
+            vis[i] = 0;
+        }
+        int s = 1;
+        for (inti = 1; i <= m; i++) {
+            int a, b, c;
+            cin >> a >> b >> c;
+            if (c >= 0) {
+                e[b].push_back({a, c});
+            }
+            e[a].push_back({b, c});
+        }
+        if (spfa(1)) {
+            cout << "YES" <<endl;
+        } else {
+            cout << "NO" <<endl;
+        }
     }
 }
