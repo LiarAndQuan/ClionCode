@@ -6,44 +6,59 @@
 using namespace std;
 
 
-int n, m;
-int w[105][105];
-int d[105][105];
+int n, m, ans, cnt;
+struct edge {
+    int v;
+    int w;
+};
+
+vector<edge> e[10000];
+int d[10000];
+int vis[10000];
+priority_queue<pair<int,int> > q;
+
+bool prim(int s) {
+    for (int i = 0; i <= n; i++) {
+        d[i] = 0x3f3f3f3f;
+    }
+    d[s] = 0;
+    q.push({0, s});
+    while (q.size()) {
+        int u = q.top().second;
+        q.pop();
+        if (vis[u]) {
+            continue;
+        }
+        vis[u] = 1;
+        ans += d[u];
+        cnt++;
+        for (auto ed: e[u]) {//对于u点的所有的边的点,更新他们的距离
+            int v = ed.v;
+            int w = ed.w;
+            if (d[v] > w) {
+                d[v] = w;
+                q.push({-d[v], v});
+            }
+        }
+    }
+    return cnt == n;//如果能够组成最小生成树返回true;
+}
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
     cin >> n >> m;
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
-            if (i != j) {
-                w[i][j] = 0x7f7f7f7f;
-            }
-        }
-    }
     for (int i = 1; i <= m; i++) {
         int a, b, c;
         cin >> a >> b >> c;
-        w[a][b] = w[b][a] = c;
+        e[a].push_back({b, c});
+        e[b].push_back({a, c});
+
     }
-    int ans = 0x7f7f7f7f;
-    memcpy(d, w, sizeof d);
-    for (int k = 1; k <= n; k++) {//在尚未开始第K轮循环时,假设最小环中编号最大的顶点为k
-        for (int i = 1; i < k; i++) {//枚举相邻的两个点
-            for (int j = i + 1; j < k; j++) {
-                ans = min(ans, d[i][j] + w[j][k] + w[k][i]);
-            }
-        }
-        for (int i = 1; i <= n; i++) {//floyd算法
-            for (int j = 1; j <= n; j++) {
-                d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
-            }
-        }
-    }
-    if (ans == 0x7f7f7f7f) {
-        cout << "No solution." <<endl;
-    } else {
+    if (prim(1)) {
         cout << ans <<endl;
+    } else {
+        cout << "orz" <<endl;
     }
 }
