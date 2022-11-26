@@ -6,58 +6,56 @@
 using namespace std;
 
 
-int n, m, ans, cnt;
+#define N 1000000
+
 struct edge {
-    int v;
-    int w;
-};
-
-vector<edge> e[10000];
-int d[10000];
-int vis[10000];
-priority_queue<pair<int,int> > q;
-
-bool prim(int s) {
-    for (int i = 0; i <= n; i++) {
-        d[i] = 0x3f3f3f3f;
+    int u, v, w;
+    bool operator<(const edge &t) const {
+        return w < t.w;
     }
-    d[s] = 0;
-    q.push({0, s});
-    while (q.size()) {
-        int u = q.top().second;
-        q.pop();
-        if (vis[u]) {
-            continue;
-        }
-        vis[u] = 1;
-        ans += d[u];
-        cnt++;
-        for (auto ed: e[u]) {//对于u点的所有的边的点,更新他们的距离
-            int v = ed.v;
-            int w = ed.w;
-            if (d[v] > w) {
-                d[v] = w;
-                q.push({-d[v], v});
-            }
-        }
+} e[N];
+
+int n, m;
+int fa[N], ans, cnt;
+
+int find(int x) {
+    if (fa[x] == x) {
+        return x;
+    } else {
+        return fa[x] = find(fa[x]);
     }
-    return cnt == n;//如果能够组成最小生成树返回true;
 }
+
+bool Kruskal() {
+    sort(e + 1, e + 1 + 2 * m);
+    for (int i = 1; i <= n; i++) {
+        fa[i] = i;
+    }
+    for (int i = 1; i <= 2 * m; i++) {
+        int x = find(e[i].u);
+        int y = find(e[i].v);
+        if (x != y) {//如果x,y不在同一个集合里面
+            fa[x] = y;
+            ans += e[i].w;
+            cnt++;
+        }
+    }
+    return cnt == n - 1;//需要结合n-1次才能保证连通
+}
+
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-
     cin >> n >> m;
     for (int i = 1; i <= m; i++) {
         int a, b, c;
         cin >> a >> b >> c;
-        e[a].push_back({b, c});
-        e[b].push_back({a, c});
-
+        e[i] = {a, b, c};
+        e[i + m] = {b, a, c};
     }
-    if (prim(1)) {
-        cout << ans <<endl;
+    if (Kruskal()) {
+        cout << ans;
     } else {
         cout << "orz" <<endl;
     }
