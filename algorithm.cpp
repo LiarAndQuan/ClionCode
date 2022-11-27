@@ -6,57 +6,64 @@
 using namespace std;
 
 
-#define N 1000000
+const int N = 5e5 + 10;
+int n, m, s;
+vector<int> e[N];
+int dep[N], fa[N][35];
+int head[N];
 
-struct edge {
-    int u, v, w;
-    bool operator<(const edge &t) const {
-        return w < t.w;
+
+void dfs(int u,int father) {
+    dep[u] = dep[father] + 1;
+    fa[u][0] = father;
+    for (int i = 1; i <= 31; i++) {
+        fa[u][i] = fa[fa[u][i - 1]][i - 1];
     }
-} e[N];
-
-int n, m;
-int fa[N], ans, cnt;
-
-int find(int x) {
-    if (fa[x] == x) {
-        return x;
-    } else {
-        return fa[x] = find(fa[x]);
-    }
-}
-
-bool Kruskal() {
-    sort(e + 1, e + 1 + 2 * m);
-    for (int i = 1; i <= n; i++) {
-        fa[i] = i;
-    }
-    for (int i = 1; i <= 2 * m; i++) {
-        int x = find(e[i].u);
-        int y = find(e[i].v);
-        if (x != y) {//如果x,y不在同一个集合里面
-            fa[x] = y;
-            ans += e[i].w;
-            cnt++;
+    for (int v: e[u]) {
+        if (v != father) {
+            dfs(v, u);
         }
     }
-    return cnt == n - 1;//需要结合n-1次才能保证连通
+
+}
+
+int lca(int u,int v) {
+    if (dep[u] < dep[v]) {//确保u为深度更大的点
+        swap(u, v);
+    }
+    for (int i = 31; i >= 0; i--) {//先跳到同一层
+        if (dep[fa[u][i]] >= dep[v]) {//如果u跳完,v还在u的上面,那就可以跳
+            u = fa[u][i];
+        }
+    }
+    if (u == v) {
+        return u;
+    }
+    for (int i = 31; i >= 0; i--) {
+        if (fa[u][i] != fa[v][i]) {//跳完之后不相等的话,那就可以跳
+            u = fa[u][i];
+            v = fa[v][i];
+        }
+    }
+    return fa[u][0];
 }
 
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    cin >> n >> m;
-    for (int i = 1; i <= m; i++) {
-        int a, b, c;
-        cin >> a >> b >> c;
-        e[i] = {a, b, c};
-        e[i + m] = {b, a, c};
+
+    cin >> n >> m >> s;
+    for (int i = 1; i <= n - 1; i++) {
+        int a, b;
+        cin >> a >> b;
+        e[a].push_back(b);
+        e[b].push_back(a);
     }
-    if (Kruskal()) {
-        cout << ans;
-    } else {
-        cout << "orz" <<endl;
+    dfs(s, 0);
+    for (int i = 1; i <= m; i++) {
+        int x, y;
+        cin >> x >> y;
+        cout << lca(x, y) <<endl;
     }
 }
