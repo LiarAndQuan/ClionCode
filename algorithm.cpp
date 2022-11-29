@@ -5,61 +5,81 @@
 #define endl '\n'
 using namespace std;
 
-#define N 100000
+
+#define N 200000
 vector<int> e[N];
 int dfn[N], low[N], tot;
+int instack[N];
 stack<int> s;
-int ins[N];
-int scc[N], siz[N], cnt;
+int scc[N], cnt;
+int in[N], out[N];
 
-void tarjan(int x) {
-    dfn[x] = low[x] = ++tot;
-    s.push(x);
-    ins[x] = 1;
-    for (int y: e[x]) {
-        if (!dfn[y]) {//如果y没有访问过
-            tarjan(y);
-            low[x] = min(low[x], low[y]);//回x的时候用y更新low
-        } else if (ins[y]) {//访问过并且在栈中
-            low[x] = min(low[x], dfn[y]);//更新low
+void tarjan(int u) {
+    dfn[u] = low[u] = ++tot;
+    s.push(u);
+    instack[u] = 1;
+    for (int v: e[u]) {
+        if (!dfn[v]) {
+            tarjan(v);
+            low[u] = min(low[u], low[v]);
+        } else if (instack[v]) {
+            low[u] = min(low[u], dfn[v]);
         }
     }
-    //离开x的时候记录scc
-    if (dfn[x] == low[x]) {
-        int y = -1;
-        cnt++;//scc编号
-        while (x != y) {
-            y = s.top();
+    if (dfn[u] == low[u]) {
+        cnt++;
+        int v = -1;
+        while (v != u) {
+            v = s.top();
             s.pop();
-            ins[y] = 0;
-            scc[y] = cnt;
-            siz[cnt]++;
+            instack[v] = 0;
+            scc[v] = cnt;
         }
     }
 }
 
-
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    int n, m;
-    cin >> n >> m;
-    for (int i = 1; i <= m; i++) {
-        int a, b;
-        cin >> a >> b;
-        e[a].push_back(b);
+
+    int n;
+    cin >> n;
+    for (int i = 1; i <= n; i++) {
+        int v;
+        while (1) {
+            cin >> v;
+            if (v == 0) {
+                break;
+            }
+            e[i].push_back(v);
+        }
     }
     for (int i = 1; i <= n; i++) {
         if (!dfn[i]) {
             tarjan(i);
-
         }
     }
-    int sum = 0;
+    for (int i = 1; i <= n; i++) {
+        for (int j: e[i]) {
+            if (scc[i] != scc[j]) {
+                in[scc[j]]++;
+                out[scc[i]]++;
+            }
+        }
+    }
+    int a = 0, b = 0;
     for (int i = 1; i <= cnt; i++) {
-        if (siz[i] > 1) {
-            sum++;
+        if (!in[i]) {
+            a++;
+        }
+        if (!out[i]) {
+            b++;
         }
     }
-    cout << sum;
+    cout << a <<endl;//入度为0的点就是需要建立的点
+    if (cnt == 1) {//如果只有一个缩点,那么需要特判,否则入度与出度为0的数量都会变为1,输出1,错误
+        cout << 0 <<endl;
+    } else {
+        cout << max(a, b) <<endl;
+    }
 }
