@@ -3,81 +3,78 @@
 #define int long long
 #define double long double
 #define endl '\n'
-using namespace std;
+using namespace std;\
 
-#define N 10000
-#define M 20000
-
-struct edge {
-		int v;
-		int ne;
-} e[M];
-
-int h[N], idx = 1;
+#define N 100000
+vector<int> e[N], ne[N];
 int dfn[N], low[N], tot;
 stack<int> s;
-int dcc[N], cnt;
-int bri[M], d[N];
+vector<int> dcc[N];
+int cut[N], root, cnt, num, id[N];
 
-
-void add(int a,int b) {
-    e[++idx].v = b;
-    e[idx].ne = h[a];
-    h[a] = idx;
-}
-
-void tarjan(int x,int in_edge) {
+void tarjan(int x) {
     dfn[x] = low[x] = ++tot;
     s.push(x);
-    for (int i = h[x]; i; i = e[i].ne) {//割边
-				int y = e[i].v;
+    if (!e[x].size()) {//孤立点
+        dcc[++cnt].push_back(x);
+        return;
+    }
+    int child = 0;
+    for (int y: e[x]) {
         if (!dfn[y]) {
-            tarjan(y, i);
+            tarjan(y);
             low[x] = min(low[x], low[y]);
-            if (low[y] > dfn[x]) {
-                bri[i] = bri[i ^ 1] = true;
+            if (low[y] >= dfn[x]) {//满足割点的条件
+                child++;
+                if (x != root || child > 1) {
+                    cut[x] = true;
+                }
+                cnt++;
+                int z = -1;
+                while (z != y) {//只要这条路满足割点的条件,那就开始出栈
+                    z = s.top();
+                    s.pop();
+                    dcc[cnt].push_back(z);
+                }
+                dcc[cnt].push_back(x);//x是割点,加入,但不出栈
             }
-        } else if (i != (in_edge ^ 1)) {
+        } else {
             low[x] = min(low[x], dfn[y]);
         }
     }
-    if (dfn[x] == low[x]) {//缩点
-				cnt++;
-        while (1) {
-						int y = s.top();
-            s.pop();
-            dcc[y] = cnt;
-            if (y == x) {
-                break;
-            }
-        }
-    }
 }
+
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-		int n, m;
+    int n, m;
     cin >> n >> m;
     for (int i = 1; i <= m; i++) {
-				int a, b;
+        int a, b;
         cin >> a >> b;
-        add(a, b);
-        add(b, a);
+        e[a].push_back(b);
+        e[b].push_back(a);
     }
-    tarjan(1, 0);
-    for (int i = 2; i <= idx; i++) {
-        if (bri[i]) {
-            d[dcc[e[i].v]]++;
+    for (root = 1; root <= n; root++) {
+        if (!dfn[root]) {
+            tarjan(root);
         }
     }
-		int sum = 0;
-    for (int i = 1; i <= cnt; i++) {
-        if (d[i] == 1) {
-            sum++;
+    num = cnt;
+    for (int i = 1; i <= n; i++) {
+        if (cut[i]) {//如果是割点,那么给割点编号
+            id[i] = ++num;
         }
     }
-    cout << (sum + 1) / 2;
-
+    for (int i = 1; i <= cnt; i++) {//枚举所有的点双连通分量vdcc
+        for (int j = 0; j < dcc[i].size(); j++) {//枚举这个点双连通分量的所有点
+            int x = dcc[i][j];
+            if (cut[x]) {//找到该vdcc中的割点,给割点的新标号和该vdcc的标号建立一条无向边
+                ne[i].push_back(id[x]);
+                ne[id[x]].push_back(i);
+            }
+        }
+    }
 }
