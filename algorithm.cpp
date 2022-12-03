@@ -3,45 +3,62 @@
 #define int long long
 #define double long double
 #define endl '\n'
-using namespace std;\
+using namespace std;
 
+#define M 100000
 #define N 100000
-vector<int> e[N], ne[N];
-int dfn[N], low[N], tot;
-stack<int> s;
-vector<int> dcc[N];
-int cut[N], root, cnt, num, id[N];
 
-void tarjan(int x) {
-    dfn[x] = low[x] = ++tot;
-    s.push(x);
-    if (!e[x].size()) {//孤立点
-        dcc[++cnt].push_back(x);
-        return;
-    }
-    int child = 0;
-    for (int y: e[x]) {
-        if (!dfn[y]) {
-            tarjan(y);
-            low[x] = min(low[x], low[y]);
-            if (low[y] >= dfn[x]) {//满足割点的条件
-                child++;
-                if (x != root || child > 1) {
-                    cut[x] = true;
+struct edge {
+    int v;
+    int c;
+    int ne;
+} e[M];
+
+int h[N], idx = 1;
+int mf[N], pre[N];
+int s, t;
+
+void add(int a,int b,int c) {
+    e[++idx] = {b, c, h[a]};
+    h[a] = idx;
+}
+
+bool bfs() {
+    memset(mf, 0, sizeof mf);//初始化每个点的流量上限为0
+    queue<int> q;
+    q.push(s);
+    mf[s] = 1e9;//起点的流量设为无穷大
+    while (q.size()) {
+        int u = q.front();
+        q.pop();
+        for (int i = h[u]; i; i = e[i].ne) {
+            int v = e[i].v;
+            if (mf[v] == 0 && e[i].c) {//如果这个点没有被访问过并且有流量可以走到这条边
+                mf[v] = min(mf[u], e[i].c);//更新
+                pre[v] = i;//记录该点的前驱边
+                q.push(v);
+                if (v == t) {//如果到达了汇点,返回
+                    return true;
                 }
-                cnt++;
-                int z = -1;
-                while (z != y) {//只要这条路满足割点的条件,那就开始出栈
-                    z = s.top();
-                    s.pop();
-                    dcc[cnt].push_back(z);
-                }
-                dcc[cnt].push_back(x);//x是割点,加入,但不出栈
             }
-        } else {
-            low[x] = min(low[x], dfn[y]);
         }
     }
+    return false;
+}
+
+int EK() {
+    int flow = 0;
+    while (bfs()) {//只要能找到可行流就继续找
+        int v = t;
+        while (v != s) {//逆序更新残留网
+            int i = pre[v];
+            e[i].c -= mf[t];//前驱边的容量减去相应数值
+            e[i ^ 1].c += mf[t];//相反边增加数值
+            v = e[i ^ 1].v;//v等于相反边的下一个点
+        }
+        flow += mf[t];
+    }
+    return flow;
 }
 
 
@@ -50,31 +67,12 @@ signed main() {
     cin.tie(nullptr);
 
     int n, m;
-    cin >> n >> m;
+    cin >> n >> m >> s >> t;
     for (int i = 1; i <= m; i++) {
-        int a, b;
-        cin >> a >> b;
-        e[a].push_back(b);
-        e[b].push_back(a);
+        int u, v, w;
+        cin >> u >> v >> w;
+        add(u, v, w);
+        add(v, u, 0);
     }
-    for (root = 1; root <= n; root++) {
-        if (!dfn[root]) {
-            tarjan(root);
-        }
-    }
-    num = cnt;
-    for (int i = 1; i <= n; i++) {
-        if (cut[i]) {//如果是割点,那么给割点编号
-            id[i] = ++num;
-        }
-    }
-    for (int i = 1; i <= cnt; i++) {//枚举所有的点双连通分量vdcc
-        for (int j = 0; j < dcc[i].size(); j++) {//枚举这个点双连通分量的所有点
-            int x = dcc[i][j];
-            if (cut[x]) {//找到该vdcc中的割点,给割点的新标号和该vdcc的标号建立一条无向边
-                ne[i].push_back(id[x]);
-                ne[id[x]].push_back(i);
-            }
-        }
-    }
+    cout << EK() <<endl;
 }
