@@ -5,8 +5,8 @@
 #define endl '\n'
 using namespace std;
 
-#define M 100000
-#define N 100000
+#define M 1000006
+#define N 1000006
 
 struct edge {
     int v;
@@ -15,29 +15,28 @@ struct edge {
 } e[M];
 
 int h[N], idx = 1;
-int mf[N], pre[N];
 int s, t;
+int d[N], cur[N];
 
-void add(int a,int b,int c) {
+void add(int a, int b, int c) {
     e[++idx] = {b, c, h[a]};
     h[a] = idx;
 }
 
-bool bfs() {
-    memset(mf, 0, sizeof mf);//初始化每个点的流量上限为0
+bool bfs() {//寻找增广路,并且按照图层划分
+    memset(d, 0, sizeof d);//每一个图层置0
     queue<int> q;
     q.push(s);
-    mf[s] = 1e9;//起点的流量设为无穷大
+    d[s] = 1;//源点图层为1
     while (q.size()) {
         int u = q.front();
         q.pop();
-        for (int i = h[u]; i; i = e[i].ne) {
+        for (int i = h[u]; i; i = e[i].ne) {//枚举边
             int v = e[i].v;
-            if (mf[v] == 0 && e[i].c) {//如果这个点没有被访问过并且有流量可以走到这条边
-                mf[v] = min(mf[u], e[i].c);//更新
-                pre[v] = i;//记录该点的前驱边
+            if (d[v] == 0 && e[i].c) {//如果没访问过并且有边可以去
+                d[v] = d[u] + 1;
                 q.push(v);
-                if (v == t) {//如果到达了汇点,返回
+                if (v == t) {
                     return true;
                 }
             }
@@ -46,17 +45,36 @@ bool bfs() {
     return false;
 }
 
-int EK() {
-    int flow = 0;
-    while (bfs()) {//只要能找到可行流就继续找
-        int v = t;
-        while (v != s) {//逆序更新残留网
-            int i = pre[v];
-            e[i].c -= mf[t];//前驱边的容量减去相应数值
-            e[i ^ 1].c += mf[t];//相反边增加数值
-            v = e[i ^ 1].v;//v等于相反边的下一个点
+int dfs(int u, int mf) {
+    if (u == t) {
+        return mf;
+    }
+    int sum = 0;
+    for (int i = cur[u]; i; i = e[i].ne) {//当前弧优化,cur[u]存的是之前u点最后访问的一条边,因为已经访问过的边不需要再访问
+        cur[u] = i;
+        int v = e[i].v;
+        if (d[v] == d[u] + 1 && e[i].c) {//如果在下一层并且有路可以走
+            int f = dfs(v, min(mf, e[i].c));//对子节点dfs,mf去较小值
+            e[i].c -= f;//构建残余网
+            e[i ^ 1].c += f;
+            sum += f;
+            mf -= f;//余量减小
+            if (mf == 0) {
+                break;
+            }
         }
-        flow += mf[t];
+    }
+    if (sum == 0) {//说明这个点不能到达t点,使其无法访问即可
+        d[u] = 0;
+    }
+    return sum;
+}
+
+int dinic() {
+    int flow = 0;
+    while (bfs()) {//如果有可行流
+        memcpy(cur, h, sizeof h);//每次遍历之前都重置cur
+        flow += dfs(s, 1e9);
     }
     return flow;
 }
@@ -68,11 +86,12 @@ signed main() {
 
     int n, m;
     cin >> n >> m >> s >> t;
+    int u, v, w;
     for (int i = 1; i <= m; i++) {
-        int u, v, w;
         cin >> u >> v >> w;
         add(u, v, w);
         add(v, u, 0);
     }
-    cout << EK() <<endl;
+    cout << dinic();
+
 }
