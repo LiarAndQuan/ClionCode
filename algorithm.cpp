@@ -5,80 +5,61 @@
 #define endl '\n'
 using namespace std;
 
-#define N 50000
 
+#define N 10000
 struct edge {
     int v;
-    int c;
-    int w;
     int ne;
-} e[2000000];
+} e[N];
 
-int h[N], idx = 1;
-int d[N], mf[N], pre[N], vis[N];
-int flow, cost;
-int s, t;
+int h[N], idx;
+int color[N];
 
-void add(int a, int b, int c, int x) {
-    e[++idx] = {b, c, x, h[a]};
+void add(int a, int b) {
+    e[++idx] = {b, h[a]};
     h[a] = idx;
 }
 
-bool spfa() {
-    memset(d, 0x3f, sizeof d);
-    memset(mf, 0, sizeof mf);
-    queue<int> q;
-    q.push(s);
-    d[s] = 0;
-    mf[s] = 0x3f3f3f3f;
-    vis[s] = 1;
-    while (q.size()) {
-        int u = q.front();
-        q.pop();
-        vis[u] = 0;
-        for (int i = h[u]; i; i = e[i].ne) {
-            int v = e[i].v;
-            int c = e[i].c;
-            int w = e[i].w;
-            if (d[v] > d[u] + w && c) {
-                d[v] = d[u] + w;
-                mf[v] = min(mf[u], c);
-                pre[v] = i;
-                if (!vis[v]) {
-                    q.push(v);
-                    vis[v] = 1;
-                }
+bool dfs(int u, int c) {
+    color[u] = c;
+    for (int i = h[u]; i; i = e[i].ne) {
+        int v = e[i].v;
+        if (!color[v]) {
+            if (dfs(v, 3 - c)) {//染成另一种色
+                return 1;
             }
+        } else if (color[v] == c) {//如果和他相连的边的颜色和他相同,那么就不符合二分图的定义
+            return 1;
         }
     }
-    return mf[t] > 0;//可行流能到达t点
-}
-
-void EK() {
-    while (spfa()) {
-        for (int v = t; v != s;) {
-            int i = pre[v];
-            e[i].c -= mf[t];
-            e[i ^ 1].c += mf[t];
-            v = e[i ^ 1].v;
-        }
-        flow += mf[t];
-        cost += mf[t] * d[t];//累加费用
-    }
+    return 0;
 }
 
 
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
+
     int n, m;
-    cin >> n >> m >> s >> t;
+    cin >> n >> m;
     for (int i = 1; i <= m; i++) {
-        int a, b, c, x;
-        cin >> a >> b >> c >> x;
-        add(a, b, c, x);
-        add(b, a, 0, -x);
+        int a, b;
+        cin >> a >> b;
+        add(a, b);
+        add(b, a);
     }
-    EK();
-    cout << flow << " " << cost;
+    bool flag = 0;
+    for (int i = 1; i <= n; i++) {
+        if (!color[i]) {
+            if (dfs(i, 1)) {
+                flag = 1;
+                break;
+            }
+        }
+    }
+    if (flag) {
+        cout << "No" << endl;
+    } else {
+        cout << "Yes" << endl;
+    }
 }
