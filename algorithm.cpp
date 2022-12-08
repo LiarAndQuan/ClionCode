@@ -6,60 +6,53 @@
 using namespace std;
 
 
-#define N 10000
+#define M 100000
+#define N 100000
+int n, m, k, ans;
 struct edge {
     int v;
     int ne;
-} e[N];
+} e[M];
 
 int h[N], idx;
-int color[N];
+int vis[N], match[N];
+
 
 void add(int a, int b) {
     e[++idx] = {b, h[a]};
     h[a] = idx;
 }
 
-bool dfs(int u, int c) {
-    color[u] = c;
+bool dfs(int u) {
     for (int i = h[u]; i; i = e[i].ne) {
         int v = e[i].v;
-        if (!color[v]) {
-            if (dfs(v, 3 - c)) {//染成另一种色
-                return 1;
-            }
-        } else if (color[v] == c) {//如果和他相连的边的颜色和他相同,那么就不符合二分图的定义
-            return 1;
+        if (vis[v]) {
+            continue;
+        }
+        vis[v] = 1;
+        if (!match[v] || dfs(match[v])) {//如果这个点没有匹配或者匹配这个点的节点能够重新匹配新的点
+            match[v] = u;//可以匹配
+            return 1;//返回可以匹配的标志
         }
     }
     return 0;
 }
 
-
 signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n, m;
-    cin >> n >> m;
-    for (int i = 1; i <= m; i++) {
+    cin >> n >> m >> k;
+    for (int i = 1; i <= k; i++) {
         int a, b;
         cin >> a >> b;
         add(a, b);
-        add(b, a);
     }
-    bool flag = 0;
     for (int i = 1; i <= n; i++) {
-        if (!color[i]) {
-            if (dfs(i, 1)) {
-                flag = 1;
-                break;
-            }
+        memset(vis, 0, sizeof vis);
+        if (dfs(i)) {
+            ans++;
         }
     }
-    if (flag) {
-        cout << "No" << endl;
-    } else {
-        cout << "Yes" << endl;
-    }
+    cout << ans;
 }
