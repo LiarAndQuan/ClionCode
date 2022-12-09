@@ -5,82 +5,76 @@
 #define endl '\n'
 using namespace std;
 
-#define N 100000
+#define INF 0x3f3f3f3f
+#define N 1000
+int match[N];
+int va[N], vb[N];
+int la[N], lb[N];
+int w[N][N], d[N];
 
-int d[N];
-int s, t;
-int vis[N];
-struct edge {
-    int v;
-    int c;
-    int ne;
-} e[2 * N];
-int h[N], idx = 1;
+int n;
 
-bool bfs() {
-    memset(d, 0, sizeof d);
-    memset(vis, 0, sizeof vis);
-    d[s] = 1;
-    queue<int> q;
-    q.push(s);
-    vis[s] = 1;
-    while (q.size()) {
-        int cur = q.front();
-        q.pop();
-        for (int i = h[cur]; i; i = e[i].ne) {
-            int v = e[i].v;
-            if (!vis[v] && e[i].c) {
-                vis[v] = 1;
-                q.push(v);
-                d[v] = d[cur] + 1;
-                if (v == t) {//放在里面才行
-                    return true;
+bool dfs(int x) {
+    va[x] = 1;//标记x在交替路中
+    for (int y = 1; y <= n; y++) {
+        if (!vb[y]) {
+            if (la[x] + lb[y] - w[x][y] == 0) {//如果是相等子图
+                vb[y] = 1;//y在交替路中
+                if (!match[y] || dfs(match[y])) {
+                    match[y] = x;//配对
+                    return 1;
+                }
+            } else {//不是相等子图就记录下最小的d[y]
+                d[y] = min(d[y], la[x] + lb[y] - w[x][y]);
+            }
+        }
+    }
+    return 0;
+}
+
+int KM() {
+    for (int i = 1; i <= n; i++) {
+        la[i] = -INF;
+    }
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            la[i] = max(la[i], w[i][j]);//左顶点值为最大边权
+        }
+    }
+    for (int i = 1; i <= n; i++) {
+        lb[i] = 0;//右顶点值为0
+    }
+    for (int i = 1; i <= n; i++) {
+        while (true) {
+            memset(va, 0, sizeof va);//每个点进去时状态重置
+            memset(vb, 0, sizeof vb);
+            for (int j = 1; j <= n; j++) {
+                d[j] = INF;
+            }
+            if (dfs(i)) {//如果成功配对,配对下一个
+                break;
+            }
+            int delta = INF;
+            for (int j = 1; j <= n; j++) {
+                if (!vb[j]) {
+                    delta = min(delta, d[j]);//如果没有成功配对,取出最小的delta
+                }
+            }
+            for (int j = 1; j <= n; j++) {
+                if (va[j]) {
+                    la[j] -= delta;//对每一个在交替路中的顶点值进行修改
+                }
+                if (vb[j]) {
+                    lb[j] += delta;
                 }
             }
         }
     }
-    return false;
-}
-
-int cur[N];
-
-int dfs(int u, int mf) {
-    if (u == t) {
-        return mf;
+    int res = 0;
+    for (int i = 1; i <= n; i++) {//累加结果
+        res += w[match[i]][i];
     }
-    int sum = 0;
-    for (int i = cur[u]; i; i = e[i].ne) {
-        cur[u] = i;
-        int v = e[i].v;
-        if (d[v] == d[u] + 1 && e[i].c) {
-            int f = dfs(v, min(mf, e[i].c));
-            e[i].c -= f;
-            e[i ^ 1].c += f;
-            sum += f;
-            mf -= f;
-            if (mf == 0) {
-                break;
-            }
-        }
-    }
-    if (sum == 0) {
-        d[u] = 0;
-    }
-    return sum;
-}
-
-int dinic() {
-    int flow = 0;
-    while (bfs()) {
-        memcpy(cur, h, sizeof h);
-        flow += dfs(s, 1e9);
-    }
-    return flow;
-}
-
-void add(int a, int b, int c) {
-    e[++idx] = {b, c, h[a]};
-    h[a] = idx;
+    return res;
 }
 
 
@@ -88,23 +82,18 @@ signed main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    int n, m, x;
-    cin >> n >> m >> x;
-    for (int i = 1; i <= x; i++) {
-        int a, b;
-        cin >> a >> b;
-        add(a, b + n, 1);//每条正向边的边权都为1
-        add(b + n, a, 0);//反向边的边权为0
-    }
-    s = 0;
-    t = n + m + 1;
+    cin >> n;
+    int m;
+    cin >> m;
     for (int i = 1; i <= n; i++) {
-        add(s, i, 1);//超级源点到左边点的距离为1
-        add(i, s, 0);
+        for (int j = 1; j <= n; j++) {
+            w[i][j] = -INF;
+        }
     }
     for (int i = 1; i <= m; i++) {
-        add(i + n, t, 1);//右边点到超级汇点的距离为1
-        add(t, i + n, 0);
+        int a, b, c;
+        cin >> a >> b >> c;
+        w[a][b] = c;
     }
-    cout << dinic();
+    cout << KM() << endl;
 }
