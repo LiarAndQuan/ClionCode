@@ -5,95 +5,84 @@
 #define endl '\n'
 using namespace std;
 
-#define INF 0x3f3f3f3f
-#define N 1000
-int match[N];
-int va[N], vb[N];
-int la[N], lb[N];
-int w[N][N], d[N];
+vector<int> e[10000];
+bool is[100005];
 
-int n;
+struct node {
+    int notion;
+    int a[10] = {0};
+} arr[100000];
 
-bool dfs(int x) {
-    va[x] = 1;//标记x在交替路中
-    for (int y = 1; y <= n; y++) {
-        if (!vb[y]) {
-            if (la[x] + lb[y] - w[x][y] == 0) {//如果是相等子图
-                vb[y] = 1;//y在交替路中
-                if (!match[y] || dfs(match[y])) {
-                    match[y] = x;//配对
-                    return 1;
-                }
-            } else {//不是相等子图就记录下最小的d[y]
-                d[y] = min(d[y], la[x] + lb[y] - w[x][y]);
+int k;
+
+int *dfs(int u, int par) {
+    for (int i: e[u]) {
+        if (i == par) {
+            continue;
+        } else {
+            int *p = dfs(i, u);
+            for (int j = 1; j <= k + 1; j++) {
+                arr[u].a[j] += p[j];
             }
+            free(p);
         }
     }
-    return 0;
+    int *p = (int *) malloc(4 * (10));
+    for (int i = 1; i <= k + 1; i++) {
+        p[i] = arr[u].a[i];
+    }
+    return p;
 }
-
-int KM() {
-    for (int i = 1; i <= n; i++) {
-        la[i] = -INF;
-    }
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
-            la[i] = max(la[i], w[i][j]);//左顶点值为最大边权
-        }
-    }
-    for (int i = 1; i <= n; i++) {
-        lb[i] = 0;//右顶点值为0
-    }
-    for (int i = 1; i <= n; i++) {
-        while (true) {
-            memset(va, 0, sizeof va);//每个点进去时状态重置
-            memset(vb, 0, sizeof vb);
-            for (int j = 1; j <= n; j++) {
-                d[j] = INF;
-            }
-            if (dfs(i)) {//如果成功配对,配对下一个
-                break;
-            }
-            int delta = INF;
-            for (int j = 1; j <= n; j++) {
-                if (!vb[j]) {
-                    delta = min(delta, d[j]);//如果没有成功配对,取出最小的delta
-                }
-            }
-            for (int j = 1; j <= n; j++) {
-                if (va[j]) {
-                    la[j] -= delta;//对每一个在交替路中的顶点值进行修改
-                }
-                if (vb[j]) {
-                    lb[j] += delta;
-                }
-            }
-        }
-    }
-    int res = 0;
-    for (int i = 1; i <= n; i++) {//累加结果
-        res += w[match[i]][i];
-    }
-    return res;
-}
-
 
 signed main() {
+
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    cin >> n;
-    int m;
-    cin >> m;
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
-            w[i][j] = -INF;
+
+    for (int i = 1; i <= 10000; i++) {//素数
+        for (int j = 2; j <= (int) sqrt(i) + 1; j++) {
+            if (i % j == 0) {
+                is[i] = true;
+                break;
+            }
         }
     }
-    for (int i = 1; i <= m; i++) {
-        int a, b, c;
-        cin >> a >> b >> c;
-        w[a][b] = c;
+    is[1] = true;
+    is[2] = false;
+
+
+    int n;
+    cin >> n >> k;
+
+    int temp;
+
+    for (int i = 1; i <= n; i++) {
+        cin >> temp;
+        if (is[temp]) {//不是
+            arr[i].notion = temp % k + 2;
+            arr[i].a[temp % k + 2] = 1;
+        } else {
+            arr[i].notion = 1;
+            arr[i].a[1] = 1;
+        }
     }
-    cout << KM() << endl;
+
+    for (int i = 1; i <= n - 1; i++) {
+        int u, v;
+        cin >> u >> v;
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+
+    int q;
+    cin >> q;
+    dfs(1, 0);
+
+    for (int i = 1; i <= q; i++) {
+        int x, y;
+        cin >> x >> y;
+        cout << arr[x].notion << " " << arr[x].a[y] << endl;
+    }
+
 }
