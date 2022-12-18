@@ -1,27 +1,35 @@
 #include<bits/stdc++.h>
+
 using namespace std;
 
-int main(){
-    int n;
-    cin>>n;
-    vector<int> v;
-    int ma = -0x3f3f3f3f,mi = 0x3f3f3f3f,cmi = 0,cma = 0;
-    for(int i = 1;i<=n;i++ ){
-        int x;
-        cin>>x;
-        if(x>ma ){
-            ma = x;
-            cma = 1;
-        }else if(x==ma ){
-            cma++;
-        }
-        if(x<mi ){
-            mi = x;
-            cmi = 1;
-        }else if(x==mi){
-            cmi++;
-        }
+struct e{
+    int l;
+    int r;
+    bool operator<(const e&e)const{
+        return r<e.r;
     }
-    cout<<mi<<" "<<cmi<<endl;
-    cout<<ma<<" "<<cma<<endl;
+}e[1000000  ];
+
+int main(){
+    int t;
+    cin>>t;
+    while(t--){
+        int n;
+        cin>>n;
+        for(int i = 1;i<=n;i++){
+            cin>>e[i].l>>e[i].r;
+        }
+        sort(e+1,e+1+n);
+        int cnt = 0;
+        int end = -1;
+        for(int i = 1;i<=n;i++){
+            if(e[i].l<end){
+                continue;
+            }else{
+                end = e[i].r;
+                cnt++;
+            }
+        }
+        cout<<cnt<<endl;
+    }
 }
